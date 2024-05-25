@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./main.css" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>Salom</h1>
+    <button id="main-btn" type="submit">Add Save</button>
+    <div class="main">
+      <form id="main-form" style="display: none">
+        <input type="text" id="main-input" placeholder="name" name="name" required /> <br />
+        <input type="text" id="main-inputes" placeholder="text" name="text" required />
+        <br />
+        <input type="file" id="main-file" placeholder="file" name="images" required /> <br />
+        <button id="main-btnjon" type="submit">Saqlash</button>
+      </form>
+    </div>
+    <form id="home-form">
+      <input type="text" placeholder="text" id="home-input" name="name" required /> <br />
+      <input type="text" placeholder="text" id="home-inputcha" name="text"  required />
+      <br />
+      <input type="file" placeholder="file yuborish" id="home-file" name="images" required />
+      <br />
+      <button type="submit" class="home-btn">uzgartirish</button>
+    </form>
+    <div class="list" style="display: none">
+      <h2>uchirilisinmi</h2>
+      <button id="uchbtn" type="button">uchirish</button>
+    </div>
+    <ul id="box-list"></ul>
+    <script>
+      const mainBtn = document.querySelector("#main-btn");
+      const mainfile = document.querySelector("#main-file");
+      const mainForm = document.querySelector("#main-form");
+      const mainInput = document.querySelector("#main-input");
+      const mainInputcha = document.querySelector("#main-inputes");
+      const mainbtnjon = document.querySelector("#main-btnjon");
+      const homeFile = document.querySelector("#home-file");
+      const box = document.querySelector("#box-list");
+      const homeform = document.querySelector("#home-form");
+      const nameru = document.querySelector("#home-input");
+      const nameuz = document.querySelector("#home-inputcha");
+      const uchbtn = document.querySelector("#uchbtn");
+      const list = document.querySelector(".list");
+      const apiUrl = "https://autoapi.dezinfeksiyatashkent.uz/api/cities";
+      const imageURL =
+        "https://autoapi.dezinfeksiyatashkent.uz/api/uploads/images/";
+      uchbtn.style.backgroundColor="red";
+      let currentEditId = null;
+      mainBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        mainForm.style.display = "block";
+      });
+      mainForm.classList.add("mainForms");
+      homeform.classList.add("homesform");
+
+      fetch(apiUrl)
+        .then((response) => response.json())
+        .then((data) => {
+          data.data.forEach((element) => {
+            const listitem = document.createElement("li");
+            const paragraf = document.createElement("p");
+            const texst = document.createElement("p");
+            const image = document.createElement("img");
+            image.style.width = "100px";
+            image.src = `${imageURL}${element.image_src}`;
+            texst.textContent = element.text;
+            paragraf.textContent = element.name;
+            listitem.classList.add("box-item");
+            paragraf.classList.add("box-paragraf");
+            texst.classList.add("box-texst");
+            const editbtn = document.createElement("button");
+            editbtn.textContent = "Edit";
+            editbtn.onclick = () => {
+              homeform.style.display = "block";
+              nameru.value = element.name;
+              nameuz.value = element.text;
+              currentEditId = element.id;
+            };
+            const deletbtn = document.createElement("button");
+            deletbtn.textContent = "Uchirish";
+            deletbtn.onclick = () => {
+              list.style.display = "block";
+              currentEditId = element.id;
+            };
+            listitem.appendChild(paragraf);
+            listitem.appendChild(texst);
+            listitem.appendChild(image);
+            listitem.appendChild(editbtn);
+            listitem.appendChild(deletbtn);
+            box.appendChild(listitem);
+          });
+        })
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+        });
+
+      homeform.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (currentEditId) {
+          editFunction(currentEditId);
+        }
+      function editFunction(id) {
+         const formData = new FormData();
+        formData.append("name",nameru.value)
+        formData.append("text", nameuz.value)
+        formData.append("images", homeFile.files[0])
+
+        console.log(homeFile.files[0]);
+        fetch(`https://autoapi.dezinfeksiyatashkent.uz/api/cities/${id}`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            // "Content-Type": "application/json",
+          },
+          body: formData
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            window.location.reload();
+            console.log(data);
+          })
+          .catch((error) => {
+            console.error("Error updating data:", error);
+          });
+      }
+    });
+     
+    
+    
+    
+    
+    
+    
+    uchbtn.addEventListener("click", () => {
+        if (currentEditId) {
+          deleteFunction(currentEditId);
+        }
+      });
+
+      function deleteFunction(id) {
+        console.log(id);
+        fetch(`https://autoapi.dezinfeksiyatashkent.uz/api/cities/${id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            window.location.reload();
+            console.log(data);
+          })
+          .catch((error) => {
+            console.error("Error deleting data:", error);
+          });
+      }
+      
+      mainForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(mainForm);
+
+        fetch("https://autoapi.dezinfeksiyatashkent.uz/api/cities", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            window.location.reload();
+            console.log(data);
+          });
+      });
+    </script>
+  </body>
+</html>
